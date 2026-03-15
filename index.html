@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SYS.CIPHER_CORE - Cyberpunk Terminal</title>
+    <link rel="icon" type="image/jpeg" href="sticker_collage_art___Sticker-removebg-preview.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+        :root {
+            --bg-color: transparent;
+            --widget-bg: rgba(255, 255, 255, 0.22);
+            --border-light: rgba(255, 255, 255, 0.5);
+            --text-color: #2d2d3a;
+            --text-muted: rgba(45, 45, 58, 0.55);
+            --glass-shadow:
+                0 20px 50px 0 rgba(0, 0, 0, 0.08),
+                inset 1px 1px 3px rgba(255, 255, 255, 0.9),
+                inset -1px -1px 2px rgba(0, 0, 0, 0.03);
+            --glass-hover:
+                0 20px 50px 0 rgba(0, 0, 0, 0.12),
+                inset 1px 1px 4px rgba(255, 255, 255, 1),
+                inset -1px -1px 3px rgba(0, 0, 0, 0.06);
+            --glass-active:
+                0 4px 20px 0 rgba(0, 0, 0, 0.06),
+                inset 2px 2px 6px rgba(0, 0, 0, 0.04),
+                inset -1px -1px 2px rgba(255, 255, 255, 0.5);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --overlay: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            --input-bg: rgba(255, 255, 255, 0.25);
+            --input-border: rgba(255, 255, 255, 0.5);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: transparent;
+            --widget-bg: rgba(15, 20, 25, 0.3);
+            --border-light: rgba(255, 255, 255, 0.15);
+            --text-color: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --glass-shadow:
+                0 15px 35px 0 rgba(0, 0, 0, 0.5),
+                inset 1px 1px 2px rgba(255, 255, 255, 0.15),
+                inset -1px -1px 2px rgba(0, 0, 0, 0.3);
+            --glass-hover:
+                0 15px 35px 0 rgba(0, 0, 0, 0.6),
+                inset 1px 1px 3px rgba(255, 255, 255, 0.25),
+                inset -1px -1px 3px rgba(0, 0, 0, 0.4);
+            --glass-active:
+                0 4px 16px 0 rgba(0, 0, 0, 0.4),
+                inset 2px 2px 5px rgba(0, 0, 0, 0.4),
+                inset -1px -1px 2px rgba(255, 255, 255, 0.1);
+            --overlay: linear-gradient(135deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.8));
+            --input-bg: rgba(0, 0, 0, 0.3);
+            --input-border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+        }
+
+        body {
+            background-color: #000;
+            background-image: url('stefan-stefancik--g7axSVst6Y-unsplash.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+
+        /* Ambient background overlay to mix well with grainy texture */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: var(--overlay);
+            z-index: 0;
+            pointer-events: none;
+            transition: var(--transition);
+        }
+
+        .widget-container {
+            background: var(--widget-bg);
+            backdrop-filter: blur(60px) saturate(1.4);
+            -webkit-backdrop-filter: blur(60px) saturate(1.4);
+            border: 1px solid var(--border-light);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.6);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.6);
+            border-radius: 35px;
+            width: 100%;
+            max-width: 650px;
+            padding: 40px;
+            box-shadow: var(--glass-shadow);
+            position: relative;
+            z-index: 1;
+            transition: var(--transition);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            color: var(--text-color);
+            letter-spacing: 1px;
+            font-weight: 600;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+        }
+
+        .tabs {
+            display: flex;
+            background: var(--input-bg);
+            border-radius: 50px;
+            margin-bottom: 30px;
+            padding: 6px;
+            border: 1px solid var(--input-border);
+            position: relative;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 50px;
+            color: var(--text-muted);
+            transition: var(--transition);
+            font-size: 1.05rem;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .tab.active {
+            color: var(--text-color);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+        }
+
+        .tab:not(.active):hover {
+            color: var(--text-color);
+        }
+
+        .tab-slider {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: calc(50% - 6px);
+            height: calc(100% - 12px);
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50px;
+            transition: left 0.4s cubic-bezier(0.25, 1, 0.5, 1), var(--transition);
+            box-shadow: var(--glass-shadow);
+            z-index: 1;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: var(--text-color);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            margin-left: 15px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        textarea {
+            width: 100%;
+            height: 140px;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 25px;
+            padding: 20px;
+            color: var(--text-color);
+            font-size: 1.05rem;
+            line-height: 1.5;
+            resize: none;
+            transition: var(--transition);
+            outline: none;
+            box-shadow:
+                inset 0 4px 10px rgba(0, 0, 0, 0.05),
+                0 1px 1px rgba(255, 255, 255, 0.1);
+        }
+
+        textarea:focus {
+            background: var(--widget-bg);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow:
+                inset 0 4px 10px rgba(0, 0, 0, 0.02),
+                0 0 0 3px var(--border-light);
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .btn-translate {
+            width: 100%;
+            padding: 18px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-light);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.4);
+            color: var(--text-color);
+            font-size: 1.25rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 30px;
+            outline: none;
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            letter-spacing: 0.5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .btn-translate:hover {
+            box-shadow: var(--glass-hover);
+            background: var(--widget-bg);
+            transform: translateY(-1px);
+        }
+
+        .btn-translate:active {
+            box-shadow: var(--glass-active);
+            transform: translateY(1px);
+        }
+
+        .output-group {
+            position: relative;
+            margin-bottom: 0;
+        }
+
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .output-header label {
+            margin-bottom: 0 !important;
+        }
+
+        .output-area {
+            width: 100%;
+            min-height: 140px;
+            max-height: 250px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-radius: 25px;
+            padding: 20px;
+            padding-top: 20px;
+            color: var(--text-color);
+            font-size: 1.05rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            box-shadow:
+                inset 0 4px 10px rgba(0, 0, 0, 0.05),
+                0 1px 1px rgba(255, 255, 255, 0.1);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        /* Custom Scrollbar for Output Area and Textarea */
+        .output-area::-webkit-scrollbar,
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-area::-webkit-scrollbar-track,
+        textarea::-webkit-scrollbar-track {
+            background: transparent;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+
+        .output-area::-webkit-scrollbar-thumb,
+        textarea::-webkit-scrollbar-thumb {
+            background: var(--border-light);
+            border-radius: 10px;
+        }
+
+        .output-area::-webkit-scrollbar-thumb:hover,
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        .output-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: var(--transition);
+            font-size: 1.05rem;
+            font-weight: 400;
+        }
+
+        .btn-copy {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.4);
+            color: var(--text-color);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 20;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: var(--glass-shadow);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .btn-paste {
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-top: 1.5px solid rgba(255, 255, 255, 0.4);
+            border-left: 1.5px solid rgba(255, 255, 255, 0.4);
+            color: var(--text-color);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 20;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: var(--glass-shadow);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .btn-copy:hover,
+        .btn-paste:hover {
+            background: var(--widget-bg);
+            box-shadow: var(--glass-hover);
+        }
+
+        .btn-copy:active,
+        .btn-paste:active {
+            box-shadow: var(--glass-active);
+            transform: translateY(1px);
+        }
+
+        /* Flash effect on button click */
+        @keyframes btn-flash {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.6);
+                transform: scale(1);
+            }
+
+            30% {
+                box-shadow: 0 0 20px 8px rgba(255, 255, 255, 0.3);
+                transform: scale(1.08);
+            }
+
+            100% {
+                box-shadow: var(--glass-shadow);
+                transform: scale(1);
+            }
+        }
+
+        .btn-flash-effect {
+            animation: btn-flash 0.5s ease-out;
+        }
+
+        /* Water Ripple Effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            animation: ripple-animation 600ms linear;
+            background-color: rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+        }
+
+        @keyframes ripple-animation {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Ocean Wave Hover Effect */
+        .tab::before,
+        .tab::after,
+        .btn-translate::before,
+        .btn-translate::after {
+            content: '';
+            position: absolute;
+            top: 150%;
+            left: 50%;
+            width: 800px;
+            height: 800px;
+            margin-left: -400px;
+            border-radius: 38%;
+            z-index: -1;
+            pointer-events: none;
+            transition: top 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .tab::before,
+        .btn-translate::before {
+            background: rgba(255, 255, 255, 0.08);
+            animation: ocean-wave 5s infinite linear;
+        }
+
+        .tab::after,
+        .btn-translate::after {
+            background: rgba(255, 255, 255, 0.15);
+            animation: ocean-wave 7s infinite linear;
+            border-radius: 42%;
+        }
+
+        .tab:hover::before,
+        .btn-translate:hover::before {
+            top: -40px;
+        }
+
+        .tab:hover::after,
+        .btn-translate:hover::after {
+            top: -20px;
+        }
+
+        @keyframes ocean-wave {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            border-top: 1.5px solid var(--widget-border-highlight);
+            border-left: 1.5px solid var(--widget-border-highlight);
+            box-shadow: var(--glass-shadow);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: var(--transition);
+            overflow: hidden;
+            font-size: 1.5rem;
+        }
+
+        .theme-toggle-btn:hover {
+            box-shadow: var(--glass-hover);
+            transform: translateY(-2px) scale(1.05);
+            background: var(--input-hover);
+        }
+
+        .theme-toggle-btn:active {
+            box-shadow: var(--glass-active);
+            transform: translateY(2px) scale(0.95);
+        }
+
+        .credit-label {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50px;
+            padding: 10px 20px;
+            font-size: 0.82rem;
+            color: var(--text-color);
+            font-weight: 600;
+            z-index: 100;
+            letter-spacing: 0.5px;
+            box-shadow: var(--glass-shadow);
+            transition: var(--transition);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .credit-label:hover {
+            box-shadow: var(--glass-hover);
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .credit-label:active {
+            box-shadow: var(--glass-active);
+            transform: translateY(1px);
+        }
+
+        .credit-label svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--text-color);
+            transition: var(--transition);
+        }
+
+        [data-theme="dark"] .credit-label {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        [data-theme="dark"] .credit-label:hover {
+            background: rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Credit -->
+    <a class="credit-label" href="https://www.instagram.com/h.adam.07" target="_blank" title="Follow @h.adam.07 on Instagram">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        Made by Adam Hajji
+    </a>
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle-btn" id="theme-toggle-btn" onclick="toggleTheme()" title="Switch Theme">
+        🌙
+    </div>
+
+    <div class="widget-container">
+        <div class="header">
+            <h1>Cipher Terminal</h1>
+        </div>
+
+        <div class="tabs">
+            <div class="tab-slider" id="tab-slider"></div>
+            <div class="tab active" id="tab-encrypt" onclick="switchTab('encrypt')">Encrypt</div>
+            <div class="tab" id="tab-decrypt" onclick="switchTab('decrypt')">Decrypt</div>
+        </div>
+
+        <div class="input-group" style="position: relative;">
+            <label id="input-label" for="input-text">Input Sequence</label>
+            <textarea id="input-text" placeholder="Enter text to encrypt..."></textarea>
+        </div>
+
+        <button class="btn-paste" onclick="pasteInput()" id="btn-paste">PASTE</button>
+        <button class="btn-translate" id="btn-action" onclick="processData()">ENCRYPT</button>
+
+        <div class="input-group output-group">
+            <div class="output-header">
+                <label id="output-label">Processed Output Stream</label>
+                <button class="btn-copy" onclick="copyOutput()" id="btn-copy">COPY</button>
+            </div>
+            <div class="output-area" id="output-container">
+                <div id="output-text"></div>
+                <div class="output-placeholder" id="output-placeholder">OUTPUT</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Dictionary
+        const lettre = {
+            'a': 'q7x2', 'b': 'k3m8', 'c': 'r9p4', 'd': 'w1s6', 'e': 'j5t0', 'f': 'n8v3',
+            'g': 'h2w7', 'h': 'f4x1', 'i': 'b6z9', 'j': 'd0a5', 'k': 'g3b8', 'l': 'v7c2',
+            'm': 's1d6', 'n': 'p5e0', 'o': 'c8f3', 'p': 'x2g7', 'q': 'z4h1', 'r': 'a6j9',
+            's': 'y0k5', 't': 'e3n8', 'u': 'u7m2', 'v': 'i1p6', 'w': 'm5q0', 'x': 'o8r3',
+            'y': 't2s7', 'z': 'l4u1',
+            'A': 'w3a9', 'B': 'v4b5', 'C': 'u5c1', 'D': 'x6d3', 'E': 'y7e8', 'F': 'z0f4',
+            'G': 'a1g6', 'H': 'b2h0', 'I': 'c3i7', 'J': 'd4j2', 'K': 'e5k8', 'L': 'f6l3',
+            'M': 'g7m9', 'N': 'h8n4', 'O': 'i9o0', 'P': 'j0p5', 'Q': 'k1q3', 'R': 'l2r8',
+            'S': 'm4s3', 'T': 'n0t6', 'U': 'o1u2', 'V': 'p3v8', 'W': 'q5w4', 'X': 'r8x0',
+            'Y': 's9y5', 'Z': 't1z6',
+            ' ': 'w6v9', '0': 'b0x5', '1': 'd3y8', '2': 'f7z2',
+            '3': 'h1a6', '4': 'j9b0', '5': 'n2c4', '6': 'p6d7', '7': 'r0e1', '8': 's4f5',
+            '9': 'x8g9', '!': 'z3h6', '@': 'a2j7', '#': 'c6k1', '$': 'e0l5', '%': 'g4n9',
+            '^': 'i8p3', '&': 'k2q7', '*': 'l6r1', '(': 'o0s5', ')': 'q4t9', '-': 'u8w3',
+            '_': 'y2z7', '=': 'b9a1', '+': 'd5c0', '[': 'f1e4', ']': 'h7g8', '{': 'j3i2',
+            '}': 'l9k6', '|': 'n5m0', ';': 'p1o4', ':': 'r7q8', '"': 't3s2', ',': 'v9u6',
+            '.': 'x5w0', '<': 'z1y4', '>': 'a8b3', '/': 'c2d9', '?': 'e6f7', '\\': 'g0h5',
+            '`': 'i4j3', '~': 'k8l2', "'": 'm3n1'
+        };
+
+        // Create reversed dictionary on initialize
+        const reversedLettre = {};
+        for (const [key, value] of Object.entries(lettre)) {
+            reversedLettre[value] = key;
+        }
+
+        // Global State
+        let currentMode = 'encrypt';
+
+        // DOM Elements
+        const inputText = document.getElementById('input-text');
+        const outputText = document.getElementById('output-text');
+        const outputPlaceholder = document.getElementById('output-placeholder');
+        const btnAction = document.getElementById('btn-action');
+        const tabEncrypt = document.getElementById('tab-encrypt');
+        const tabDecrypt = document.getElementById('tab-decrypt');
+        const tabSlider = document.getElementById('tab-slider');
+        const btnCopy = document.getElementById('btn-copy');
+        const btnPaste = document.getElementById('btn-paste');
+        const outputContainer = document.getElementById('output-container');
+        const inputLabel = document.getElementById('input-label');
+        const outputLabel = document.getElementById('output-label');
+
+        // Normalize smart/curly quotes and special Unicode chars to ASCII equivalents
+        function normalizeText(text) {
+            return text
+                .replace(/[\u2018\u2019\u201A\u2039\u203A]/g, "'")  // curly single quotes → '
+                .replace(/[\u201C\u201D\u201E\u00AB\u00BB]/g, '"')  // curly double quotes → "
+                .replace(/[\u2013\u2014]/g, '-')                     // en/em dash → -
+                .replace(/\u2026/g, '...')                           // ellipsis → ...
+                .replace(/\u00A0/g, ' ')                             // non-breaking space → space
+                .replace(/[\r\n\t]/g, ' ');                          // newlines/tabs → space
+        }
+
+        // Function 1: The Encryptor
+        function the_catib(text) {
+            let result = '';
+            const cleanText = normalizeText(text);
+
+            for (let i = 0; i < cleanText.length; i++) {
+                const char = cleanText[i];
+                if (lettre.hasOwnProperty(char)) {
+                    result += lettre[char];
+                } else {
+                    result += '????';
+                }
+            }
+            return result;
+        }
+
+        // Function 2: The Decryptor
+        function the_translator(text) {
+            // Strip all whitespace so pasted line-wrapped cipher text aligns correctly
+            const cleanCipher = text.replace(/\s/g, '');
+            let result = '';
+
+            for (let i = 0; i < cleanCipher.length; i += 4) {
+                const chunk = cleanCipher.substr(i, 4);
+
+                if (reversedLettre.hasOwnProperty(chunk)) {
+                    result += reversedLettre[chunk];
+                } else {
+                    result += '?';
+                }
+            }
+            return result;
+        }
+
+        // UI Interactions
+        function switchTab(mode) {
+            if (currentMode === mode) return;
+            currentMode = mode;
+
+            if (mode === 'encrypt') {
+                tabEncrypt.classList.add('active');
+                tabDecrypt.classList.remove('active');
+                tabSlider.style.left = '6px';
+
+                btnAction.innerText = 'ENCRYPT';
+                inputText.placeholder = "Enter text to encrypt...";
+                inputLabel.innerText = "Input Sequence";
+                btnPaste.style.display = 'none';
+
+            } else {
+                tabDecrypt.classList.add('active');
+                tabEncrypt.classList.remove('active');
+                tabSlider.style.left = '50%';
+
+                btnAction.innerText = 'DECRYPT';
+                inputText.placeholder = "Enter 4-char cipher blocks to decrypt...";
+                inputLabel.innerText = "Cipher Sequence";
+                btnPaste.style.display = 'block';
+            }
+
+            inputText.value = '';
+            processData();
+        }
+
+        function processData() {
+            const inputVals = inputText.value;
+            let result = '';
+
+            if (!inputVals.trim()) {
+                outputText.innerText = '';
+                outputPlaceholder.style.opacity = '1';
+                btnCopy.style.display = 'none';
+                return;
+            }
+
+            if (currentMode === 'encrypt') {
+                result = the_catib(inputVals);
+            } else {
+                result = the_translator(inputVals);
+            }
+
+            outputText.innerText = result;
+            outputPlaceholder.style.opacity = '0';
+            btnCopy.style.display = 'block';
+        }
+
+        // Real-time processing
+        inputText.addEventListener('input', processData);
+
+        // Flash effect helper
+        function triggerFlash(btn) {
+            btn.classList.remove('btn-flash-effect');
+            void btn.offsetWidth; // force reflow
+            btn.classList.add('btn-flash-effect');
+            btn.addEventListener('animationend', () => {
+                btn.classList.remove('btn-flash-effect');
+            }, { once: true });
+        }
+
+        // Clipboard Copy
+        function copyOutput() {
+            const textToCopy = outputText.innerText;
+            if (!textToCopy) return;
+            triggerFlash(btnCopy);
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(textToCopy).then(showCopied).catch(fallbackCopy);
+            } else {
+                fallbackCopy();
+            }
+
+            function fallbackCopy() {
+                const textArea = document.createElement("textarea");
+                textArea.value = textToCopy;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-999999px";
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showCopied();
+                } catch (err) {
+                    console.error('Fallback copy failed', err);
+                }
+                document.body.removeChild(textArea);
+            }
+
+            function showCopied() {
+                const originalText = "COPY";
+                btnCopy.innerText = 'COPIED!';
+                setTimeout(() => {
+                    if (btnCopy.innerText === 'COPIED!') {
+                        btnCopy.innerText = originalText;
+                    }
+                }, 2000);
+            }
+        }
+
+        // Clipboard Paste
+        async function pasteInput() {
+            triggerFlash(btnPaste);
+            try {
+                const text = await navigator.clipboard.readText();
+                inputText.value += text;
+                processData();
+            } catch (err) {
+                console.error('Failed to paste', err);
+                alert('Clipboard access denied. Please use Ctrl+V (or Cmd+V) to paste.');
+            }
+        }
+
+        // Theme toggling logic
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const toggleBtn = document.getElementById('theme-toggle-btn');
+
+            if (currentTheme === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                toggleBtn.innerText = '🌙';  // Moon for light mode (switch TO dark)
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                toggleBtn.innerText = '💡';  // Lightbulb for dark mode (switch TO light)
+            }
+        }
+
+        // Water Ripple Effect
+        function createRipple(event) {
+            const button = event.currentTarget;
+            const circle = document.createElement("span");
+            const diameter = Math.max(button.clientWidth, button.clientHeight);
+            const radius = diameter / 2;
+            const rect = button.getBoundingClientRect();
+
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${event.clientX - rect.left - radius}px`;
+            circle.style.top = `${event.clientY - rect.top - radius}px`;
+            circle.classList.add("ripple");
+
+            const existingRipple = button.querySelector(".ripple");
+            if (existingRipple) {
+                existingRipple.remove();
+            }
+
+            button.appendChild(circle);
+
+            // Optional cleanup
+            setTimeout(() => {
+                circle.remove();
+            }, 600);
+        }
+
+        const buttonsToRipple = document.querySelectorAll('.tab, .btn-translate, .btn-copy, .btn-paste, .theme-toggle-btn');
+        buttonsToRipple.forEach(btn => {
+            btn.addEventListener('click', createRipple);
+        });
+    </script>
+</body>
+
+</html>
